@@ -1,0 +1,27 @@
+.horario-boton {
+    display: inline-block;
+    border: 1px solid #007bff; /* Color primario de Bootstrap */
+    background-color: white;
+    color: #007bff;
+    padding: 5px 8px;
+    margin-right: 5px;
+    margin-bottom: 5px;
+    border-radius: 5px;
+    font-size: 0.9em;
+    cursor: pointer; /* Indica que es un botón */
+}
+
+.horario-boton:hover {
+    background-color: #007bff;
+    color: white;
+}
+
+.card-wrapper {
+    width: 220px; /* Ajusta el ancho para hacer las tarjetas más pequeñas */
+    margin-bottom: 20px;
+}
+
+.card-img-top {
+    max-height: 200px; /* Ajusta la altura máxima de la imagen */
+    object-fit: cover;
+}
