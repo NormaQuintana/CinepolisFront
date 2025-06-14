@@ -24,7 +24,7 @@ if ($xml === false) {
 <body>
 
     <div class="container">
-        <h1 class="text-center mb-4">Nuestra Cartelera</h1>
+        <h1 class="text-center mb-4">Peliculas Disponibles</h1>
 
         <div class="mb-3">
             <input type="text" id="searchInput" class="form-control" placeholder="Buscar película por nombre">
