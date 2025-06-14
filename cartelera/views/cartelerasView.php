@@ -4,18 +4,21 @@ $xmlContent = file_get_contents($xmlUrl);
 $xmlContent = ltrim($xmlContent);
 $xml = simplexml_load_string($xmlContent);
 if ($xml === false) {
-    die("Error al cargar Peliculas");
+    die("Error al cargar Carteleras");
 }
 
 $carteleraAgrupada = [];
 $cinesUnicos = [];
 if ($xml && $xml->cartelera) {
     foreach ($xml->cartelera as $cartelera) {
-        $cineNombre = trim($cartelera->cine);
-        $peliculaTitulo = trim($cartelera->pelicula);
-        $horario = trim($cartelera->horario);
-        $rutaPoster = trim($cartelera->ruta_poster);
-        $fecha = trim($cartelera->fecha);
+        $cineNombre = trim((string)$cartelera->cine); // Asegúrate de castear a string
+        $peliculaTitulo = trim((string)$cartelera->pelicula); // Asegúrate de castear a string
+        $horario = trim((string)$cartelera->horario);
+        $rutaPoster = trim((string)$cartelera->ruta_poster);
+        $fecha = trim((string)$cartelera->fecha);
+        $idPelicula = trim((string)$cartelera->id_pelicula);
+        $idCartelera = trim((string)$cartelera->id_cartelera);
+        $idSala = trim((string)$cartelera->id_sala); // Asegúrate de que tu XML tenga el id_pelicula
 
         if (!in_array($cineNombre, $cinesUnicos)) {
             $cinesUnicos[] = $cineNombre;
@@ -29,11 +32,16 @@ if ($xml && $xml->cartelera) {
                 'ruta_poster' => $rutaPoster,
                 'horarios' => [],
                 'fecha' => $fecha,
+                'id_pelicula' => $idPelicula, 
             ];
         }
-        $carteleraAgrupada[$cineNombre][$peliculaTitulo]['horarios'][] = $horario;
+        $carteleraAgrupada[$cineNombre][$peliculaTitulo]['horarios'][] = [
+            'horario_completo' => $horario,
+            'id_sala' => $idSala,
+            'id_cartelera' => $idCartelera
+        ];
     }
-    sort($cinesUnicos); // Opcional: ordenar los cines alfabéticamente
+    sort($cinesUnicos); 
 }
 ?>
 
@@ -84,6 +92,9 @@ if ($xml && $xml->cartelera) {
                     <?php endforeach; ?>
                 </select>
             </div>
+            <div>
+                <a href="/Cinepolis-Front/pelicula/views/peliculasView.php" class="btn btn-primary">Ver peliculas disponibles</a>
+            </div>
         <?php endif; ?>
         <div class="row">
             <?php if (!empty($carteleraAgrupada)): ?>
@@ -94,7 +105,7 @@ if ($xml && $xml->cartelera) {
                     </div>
                     <div class="d-flex flex-wrap">
                         <?php foreach ($peliculas as $peliculaTitulo => $peliculaData): ?>
-                            <div class="card card-wrapper mr-3">
+                            <div class="card card-wrapper mr-3 movie-card" data-cine="<?php echo htmlspecialchars($cineNombre); ?>">
                                 <?php if (!empty($peliculaData['ruta_poster'])): ?>
                                     <img src="<?php echo trim($peliculaData['ruta_poster']); ?>" class="card-img-top" alt="<?php echo htmlspecialchars($peliculaTitulo); ?>">
                                 <?php else: ?>
@@ -104,12 +115,35 @@ if ($xml && $xml->cartelera) {
                                     <h5 class="card-title"><?php echo htmlspecialchars($peliculaTitulo); ?></h5>
                                     <p class="card-text"><strong>Horarios:</strong></p>
                                     <div>
-                                        <?php foreach ($peliculaData['horarios'] as $horarioCompleto): ?>
-                                            <?php
-                                                $horarioFormateado = date("H:i", strtotime($horarioCompleto));
-                                            ?>
-                                            <button class="horario-boton"><?php echo htmlspecialchars($horarioFormateado); ?></button>
-                                        <?php endforeach; ?>
+                                        <?php foreach ($peliculaData['horarios'] as $horarioData): ?>
+                                        <?php
+                                            $horarioFormateado = date("H:i", strtotime($horarioData['horario_completo']));
+                                        ?>
+                                        <button class="horario-boton"
+                                                onclick="abrirSeleccionBoletos(
+                                                    '<?php echo htmlspecialchars($peliculaData['id_pelicula']); ?>',
+                                                    '<?php echo htmlspecialchars(str_replace(' ', '-', $cineNombre)); ?>',
+                                                    '<?php echo htmlspecialchars($peliculaTitulo); ?>',
+                                                    '<?php echo htmlspecialchars($horarioData['horario_completo']); ?>',
+                                                    '<?php echo htmlspecialchars($horarioData['id_sala']); ?>',        /* <-- YA PUEDE PASAR EL ID REAL */
+                                                    '<?php echo htmlspecialchars($horarioData['id_cartelera']); ?>'   /* <-- YA PUEDE PASAR EL ID REAL */
+                                                )">
+                                            <?php echo htmlspecialchars($horarioFormateado); ?>
+                                        </button>
+                                    <?php endforeach; ?>
+
+                                    <script>
+                                        function abrirSeleccionBoletos(idPelicula, idCine, tituloPelicula, horario, idSala, idCartelera) { // <--- Nuevos parámetros
+                                            var url = '/Cinepolis-Front/boletos/mostrarBoletos.php?' +
+                                                    'id_sala=' + encodeURIComponent(idSala) + '&' +             // <--- USA LOS PARÁMETROS REALES
+                                                    'id_cartelera=' + encodeURIComponent(idCartelera) + '&' +   // <--- USA LOS PARÁMETROS REALES
+                                                    'idPelicula=' + encodeURIComponent(idPelicula) + '&' +
+                                                    'cine=' + encodeURIComponent(idCine) + '&' +
+                                                    'pelicula=' + encodeURIComponent(tituloPelicula) + '&' +
+                                                    'horario=' + encodeURIComponent(horario);
+                                            window.open(url, '_blank', 'width=800,height=600');
+                                        }
+                                    </script>
                                     </div>
                                     <p class="card-text mt-2"><strong>Fecha:</strong> <?php echo htmlspecialchars($peliculaData['fecha']); ?></p>
                                 </div>
@@ -118,7 +152,7 @@ if ($xml && $xml->cartelera) {
                     </div>
                 <?php endforeach; ?>
             <?php else: ?>
-                <p class="text-center">No se encontraron películas.</p>
+                <p class="text-center">No se encontraron carteleras.</p>
             <?php endif; ?>
         </div>
     </div>
@@ -128,18 +162,16 @@ if ($xml && $xml->cartelera) {
         $(document).ready(function() {
             $('#selectCine').change(function() {
                 var selectedCine = $(this).val();
-                $('.cine-section').hide(); 
-                $('.card-wrapper').hide(); 
+                $('.cine-section').hide();
+                $('.movie-card').hide();
 
                 if (selectedCine === '') {
-                    $('.cine-section').show(); 
-                    $('.d-flex').each(function() {
-                        $(this).children('.card-wrapper').show(); 
-                    });
+                    $('.cine-section').show();
+                    $('.movie-card').show();
                 } else {
                     var cineId = selectedCine.replace(/ /g, '-');
-                    $('#' + cineId).show(); 
-                    $('#' + cineId).next('.d-flex').children('.card-wrapper').show(); 
+                    $('#' + cineId).show();
+                    $('.movie-card[data-cine="' + selectedCine + '"]').show();
                 }
             });
         });
