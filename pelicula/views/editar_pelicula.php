@@ -5,28 +5,58 @@ if (!isset($_GET['id'])) {
 }
 $id = $_GET['id'];
 
-// Definir géneros y clasificaciones (puedes cambiar o traerlos del API)
-$generos = [
-    1 => "Acción",
-    2 => "Animación",
-    3 => "Comedia",
-    4 => "Drama",
-    // Agrega los que necesites
-];
+// Función auxiliar para obtener datos XML de una URL
+function getXmlDataFromUrl($url) {
+    $xmlContent = file_get_contents($url);
+    if ($xmlContent === false) {
+        return false;
+    }
+    return simplexml_load_string($xmlContent);
+}
 
-$clasificaciones = [
-    1 => "A",
-    2 => "B",
-    3 => "C",
-    // Agrega los que necesites
-];
+// --- Obtener todos los géneros ---
+$urlGeneros = "http://localhost:8080/api/cinepolis/generos/obtenerGeneros";
+$generosXml = getXmlDataFromUrl($urlGeneros);
+$generos = [];
+if ($generosXml !== false && isset($generosXml->genero)) {
+    foreach ($generosXml->genero as $genero) {
+        // CORREGIDO: Acceder a 'nombre' en lugar de 'nombre_genero'
+        $generos[intval($genero->id_genero)] = (string)$genero->nombre; 
+    }
+} else {
+    $generos = [
+        1 => "Acción (Default)",
+        2 => "Animación (Default)",
+        3 => "Comedia (Default)",
+        4 => "Drama (Default)",
+    ];
+    error_log("Error: No se pudieron obtener los géneros desde la API: " . $urlGeneros);
+}
 
-// Obtener datos actuales para mostrar en el formulario
-$urlGet = "http://localhost:8080/api/cinepolis/peliculas/obtenerPelicula/" . $id;
-$xmlContent = file_get_contents($urlGet);
-$pelicula = simplexml_load_string($xmlContent);
+// --- Obtener todas las clasificaciones ---
+$urlClasificaciones = "http://localhost:8080/api/cinepolis/clasificaciones/obtenerClasificaciones";
+$clasificacionesXml = getXmlDataFromUrl($urlClasificaciones);
+$clasificaciones = [];
+if ($clasificacionesXml !== false && isset($clasificacionesXml->clasificacion)) {
+    foreach ($clasificacionesXml->clasificacion as $clasificacion) {
+        // CORREGIDO: Acceder a 'nombre' en lugar de 'tipo_clasificacion'
+        $clasificaciones[intval($clasificacion->id_clasificacion)] = (string)$clasificacion->nombre;
+    }
+} else {
+    $clasificaciones = [
+        1 => "A (Default)",
+        2 => "B (Default)",
+        3 => "C (Default)",
+    ];
+    error_log("Error: No se pudieron obtener las clasificaciones desde la API: " . $urlClasificaciones);
+}
+
+
+// Obtener datos actuales de la película para mostrar en el formulario
+$urlGetPelicula = "http://localhost:8080/api/cinepolis/peliculas/obtenerPelicula/" . $id;
+$pelicula = getXmlDataFromUrl($urlGetPelicula);
 if ($pelicula === false) {
-    die("Error al cargar los datos de la película");
+    die("Error al cargar los datos de la película desde la API.");
 }
 
 $id_genero_actual = intval($pelicula->id_genero ?? 1);
@@ -43,7 +73,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $reparto = $_POST['reparto'] ?? '';
     $ruta_poster = $_POST['ruta_poster'] ?? '';
 
-    // Actualizar variables para mantener seleccionadas en caso de error
+    // Actualizar variables para mantener seleccionadas en caso de error o recarga
     $id_genero_actual = intval($id_genero);
     $id_clasificacion_actual = intval($id_clasificacion);
 
@@ -60,10 +90,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </pelicula>";
 
     // URL para actualizar película
-    $url = "http://localhost:8080/api/cinepolis/peliculas/editarPelicula/" . $id;
+    $urlPut = "http://localhost:8080/api/cinepolis/peliculas/editarPelicula/" . $id;
 
     // Hacer la petición PUT con cURL
-    $ch = curl_init($url);
+    $ch = curl_init($urlPut);
     curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "PUT");
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($ch, CURLOPT_HTTPHEADER, [
@@ -83,7 +113,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $mensaje = "Error al actualizar la película. Código HTTP: $httpCode. Respuesta: $response";
     }
 
-    // Actualizar el objeto $pelicula con los nuevos datos en caso de error
+    // Actualizar el objeto $pelicula con los nuevos datos en caso de error para que el formulario los muestre
     $pelicula->titulo = $titulo;
     $pelicula->director = $director;
     $pelicula->sinopsis = $sinopsis;

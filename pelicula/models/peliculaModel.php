@@ -53,7 +53,7 @@ class PeliculaModel
     {
         $url = $this->apiPeliculas . "editarPelicula/" . $id;
         $response = $this->sendRequest('PUT', $url, $xmlData);
-        // Puedes verificar que la respuesta sea exitosa (según tu API)
+
         return ($response !== false);
     }
 
