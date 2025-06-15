@@ -5,26 +5,42 @@ $xml = simplexml_load_string($xmlContent);
 if ($xml === false) {
     die("Error al cargar Peliculas");
 }
-
 ?>
 
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cartelera Cinepolis Coquette</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css" integrity="sha384-xOolHFLEh07PJGoPkLv1IbcEPTNtaed2xpHsD9ESMhqIYd0nLMwNLD69Npy4HI+N" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
     <style>
         .movie-card {
             margin-bottom: 20px;
         }
+
+        .btn-group-custom {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+        }
+
+        .btn-group-custom .btn {
+            flex: 1;
+            margin-right: 5px;
+        }
+
+        .btn-group-custom .btn:last-child {
+            margin-right: 0;
+        }
     </style>
 </head>
+
 <body>
 
     <div class="container">
-        <h1 class="text-center mb-4">Peliculas Disponibles</h1>
+        <h1 class="text-center mb-4">Películas Disponibles</h1>
 
         <div class="mb-3">
             <input type="text" id="searchInput" class="form-control" placeholder="Buscar película por nombre">
@@ -33,6 +49,7 @@ if ($xml === false) {
         <div class="row" id="moviesContainer">
             <?php if ($xml && $xml->pelicula): ?>
                 <?php foreach ($xml->pelicula as $pelicula): ?>
+
                     <div class="col-md-4 mb-4 movie-item">
                         <div class="card movie-card">
                             <?php if (!empty($pelicula->ruta_poster)): ?>
@@ -48,7 +65,19 @@ if ($xml === false) {
                                 <p class="card-text"><?php echo htmlspecialchars(substr($pelicula->sinopsis, 0, 100)); ?>...</p>
                                 <p class="card-text"><small class="text-muted">Duración: <?php echo htmlspecialchars($pelicula->duracion); ?> minutos</small></p>
                                 <p class="card-text"><small class="text-muted">Reparto: <?php echo htmlspecialchars($pelicula->reparto); ?></small></p>
-                                <a href="pelicula_detalle.php?id=<?php echo htmlspecialchars($pelicula->id_pelicula); ?>" class="btn btn-primary">Ver más</a>
+
+                                <div class="btn-group-custom">
+                                    <a href="pelicula_detalle.php?id=<?php echo htmlspecialchars($pelicula->id_pelicula); ?>" class="btn btn-primary btn-sm">Ver más</a>
+                                    <a href="editar_pelicula.php?id=<?php echo htmlspecialchars($pelicula->id_pelicula); ?>" class="btn btn-warning btn-sm">Editar</a>
+
+                                    <button class="btn btn-danger btn-sm"
+                                        onclick="borrarPelicula('<?php echo $pelicula->id_pelicula; ?>', this)">
+                                        Borrar
+                                    </button>
+
+
+
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -74,6 +103,36 @@ if ($xml === false) {
                 });
             });
         });
+
+        function borrarPelicula(id, button) {
+            if (!confirm('¿Estás seguro de que deseas borrar esta película?')) {
+                return;
+            }
+
+            fetch(`http://localhost:8080/api/cinepolis/peliculas/eliminarPelicula/${id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/xml'
+                    }
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('No se pudo eliminar la película');
+                    }
+                    alert('Película eliminada correctamente');
+
+                    // Opcional: Eliminar el card visualmente sin recargar
+                    const card = button.closest('.movie-item');
+                    if (card) {
+                        card.remove();
+                    }
+                })
+                .catch(error => {
+                    console.error('Error al borrar la película:', error);
+                    alert('Error al borrar la película');
+                });
+        }
     </script>
 </body>
+
 </html>

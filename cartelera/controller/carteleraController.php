@@ -2,16 +2,18 @@
 require_once (__DIR__ . '/../models/carteleraModel.php');
 
 class CarteleraController {
-    public function __construct() {
-        $this->carteleraModel = new CarteleraModel();
-    }
+    public static function getCartelera() {
+        $carteleraModel = new CarteleraModel();  // instancia local
+        $cartelera = $carteleraModel->getCartelera();
 
-    public function getCartelera() {
-        $cartelera = $this->carteleraModel->getCartelera();
         if ($cartelera === false) {
-            die("Error al cargar Cartelera");
+            http_response_code(500);
+            echo json_encode(["error" => "Error al cargar Cartelera"]);
+            exit;
         }
-        return $cartelera;
+        header('Content-Type: application/json');
+        echo json_encode($cartelera);
     }
 }
+
 ?>
