@@ -161,17 +161,6 @@ class BoletoController{
         if ($idSala > 0 && $idCartelera > 0) {
             $xmlAsientos = $this->boletoModel->obtenerEstadoAsientos($idSala, $idCartelera);
 
-            // --- LÍNEAS DE DEBUGGING TEMPORALES: COLOCA ESTO AQUÍ ---
-            echo '<pre>DEBUG: Valor de $xmlAsientos: ';
-            var_dump($xmlAsientos);
-            echo '</pre>';
-            if ($xmlAsientos instanceof SimpleXMLElement) {
-                 echo '<pre>DEBUG: Número de elementos <asiento> encontrados: ' . $xmlAsientos->asiento->count() . '</pre>';
-            } else {
-                echo '<pre>DEBUG: $xmlAsientos NO es una instancia de SimpleXMLElement o es nulo/falso.</pre>';
-            }
-            // --- FIN DE LÍNEAS DE DEBUGGING TEMPORALES ---
-
             if ($xmlAsientos instanceof SimpleXMLElement) { // Asegúrate de que es un objeto SimpleXMLElement válido
                 // Iterar sobre los nodos 'asiento'
                 foreach ($xmlAsientos->asiento as $asiento) {
@@ -190,12 +179,6 @@ class BoletoController{
         } else {
             error_log("Falta id_sala o id_cartelera para la vista de selección de asientos.");
         }
-
-        // --- LÍNEAS DE DEBUGGING TEMPORALES: Y ESTO AQUÍ TAMBIÉN ---
-        echo '<pre>DEBUG: Contenido final de $asientosData antes de pasar a la vista: ';
-        var_dump($asientosData);
-        echo '</pre>';
-        // --- FIN DE LÍNEAS DE DEBUGGING TEMPORALES ---
 
         // Prepara todos los datos necesarios
         $viewData = [ // Renombrado a $viewData para evitar confusión si $data se usaba localmente
