@@ -30,7 +30,6 @@ if ($xml === false) {
             flex: 1;
             margin-right: 5px;
         }
-
         .btn-group-custom .btn:last-child {
             margin-right: 0;
         }
@@ -43,7 +42,8 @@ if ($xml === false) {
         <h1 class="text-center mb-4">Películas Disponibles</h1>
 
         <div class="mb-3">
-            <input type="text" id="searchInput" class="form-control" placeholder="Buscar película por nombre">
+            <input type="text" id="searchInput" class="form-control" placeholder="Buscar película por nombre"><br>
+            <a href="agregarPelicula.php" class="btn btn-primary btn-sm">Agregar Pelicula</a>
         </div>
 
         <div class="row" id="moviesContainer">
@@ -86,43 +86,41 @@ if ($xml === false) {
                 <p class="text-center">No se encontraron películas.</p>
             <?php endif; ?>
         </div>
-    </div>
+        </div>
 
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script>
-        $(document).ready(function() {
-            $('#searchInput').on('input', function() {
-                var searchText = $(this).val().toLowerCase();
-                $('.movie-item').each(function() {
-                    var movieTitle = $(this).find('.card-title').text().toLowerCase();
-                    if (movieTitle.includes(searchText)) {
-                        $(this).show();
-                    } else {
-                        $(this).hide();
-                    }
-                });
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    $(document).ready(function() {
+        $('#searchInput').on('input', function() {
+            var searchText = $(this).val().toLowerCase();
+            $('.movie-item').each(function() {
+                var movieTitle = $(this).find('.card-title').text().toLowerCase();
+                if (movieTitle.includes(searchText)) {
+                    $(this).show();
+                } else {
+                    $(this).hide();
+                }
             });
         });
+    });
 
-        function borrarPelicula(id, button) {
-            if (!confirm('¿Estás seguro de que deseas borrar esta película?')) {
-                return;
-            }
+    function borrarPelicula(id, button) {
+        if (!confirm('¿Estás seguro de que deseas borrar esta película?')) {
+            return;
+        }
 
-            fetch(`http://localhost:8080/api/cinepolis/peliculas/eliminarPelicula/${id}`, {
-                    method: 'DELETE',
-                    headers: {
-                        'Content-Type': 'application/xml'
-                    }
-                })
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('No se pudo eliminar la película');
-                    }
-                    alert('Película eliminada correctamente');
-
-                    // Opcional: Eliminar el card visualmente sin recargar
-                    const card = button.closest('.movie-item');
+        fetch(http://localhost:8080/api/cinepolis/peliculas/eliminarPelicula/${id}, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/xml'
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('No se pudo eliminar la película');
+                }
+                alert('Película eliminada correctamente');
+                const card = button.closest('.movie-item');
                     if (card) {
                         card.remove();
                     }
