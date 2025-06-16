@@ -2,6 +2,7 @@
 $xmlUrl = 'http://localhost:8080/api/cinepolis/cartelera/obtenerCarteleras';
 $xmlContent = file_get_contents($xmlUrl);
 $xmlContent = ltrim($xmlContent);
+
 $xml = simplexml_load_string($xmlContent);
 if ($xml === false) {
     die("Error al cargar Carteleras");
@@ -41,7 +42,7 @@ if ($xml && $xml->cartelera) {
             'id_cartelera' => $idCartelera
         ];
     }
-    sort($cinesUnicos); 
+    sort($cinesUnicos); // Opcional: ordenar los cines alfabéticamente
 }
 ?>
 
@@ -83,6 +84,12 @@ if ($xml && $xml->cartelera) {
 <body>
     <div class="container">
         <h1 class="text-center mb-4">Carteleras</h1>
+        <div class="text-right mt-4">
+    <a href="../../cartelera/views/agregarPeliculasView.php" class="btn btn-success">
+        ➕ Agregar Película
+    </a>
+</div>
+
         <?php if (!empty($cinesUnicos)): ?>
             <div class="mb-3">
                 <select class="form-control" id="selectCine">
@@ -175,6 +182,8 @@ if ($xml && $xml->cartelera) {
                 }
             });
         });
+
+        
     </script>
 </body>
 </html>
